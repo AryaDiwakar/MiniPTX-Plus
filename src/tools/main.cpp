@@ -3,6 +3,7 @@
 #include "miniptx/ir.h"
 #include "miniptx/ptx_emitter.h"
 #include "miniptx/constant_folding.h"
+#include "miniptx/extra_opts.h"
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -33,7 +34,7 @@ int main(int argc, char** argv) {
   if (mode=="check"){ std::cout<<"OK\n"; return 0; }
   if (mode=="ast"){ std::cout<<"AST parsed ("<<ast->children.size()<<" functions)\n"; return 0; }
   auto ir=miniptx::lowerToIR(ast);
-  if (!noOpt) miniptx::constantFolding(ir);
+  if (!noOpt){ miniptx::constantFolding(ir); miniptx::strengthReduction(ir); miniptx::deadCodeElimination(ir); }
   if (mode=="ir" || dumpIR){ std::cout<<ir.dump(); }
   if (mode=="compile"){
     std::string ptx=miniptx::emitPTX(ir);
