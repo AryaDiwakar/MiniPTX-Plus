@@ -2,6 +2,7 @@
 #include "miniptx/parser.h"
 #include "miniptx/ir.h"
 #include "miniptx/ptx_emitter.h"
+#include "miniptx/constant_folding.h"
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -10,7 +11,7 @@
 int main(int argc, char** argv) {
   std::string mode="compile";
   std::string input, output;
-  bool dumpIR=false;
+  bool dumpIR=false; bool noOpt=false;
   for (int i=1;i<argc;i++){
     std::string a=argv[i];
     if (a=="check"){ mode="check"; }
@@ -18,6 +19,7 @@ int main(int argc, char** argv) {
     else if (a=="ir"){ mode="ir"; }
     else if (a=="compile"){ mode="compile"; }
     else if (a=="--dump-ir"){ dumpIR=true; }
+    else if (a=="--no-opt"){ noOpt=true; }
     else if (a=="-o" && i+1<argc){ output=argv[++i]; }
     else input=a;
   }
@@ -31,6 +33,7 @@ int main(int argc, char** argv) {
   if (mode=="check"){ std::cout<<"OK\n"; return 0; }
   if (mode=="ast"){ std::cout<<"AST parsed ("<<ast->children.size()<<" functions)\n"; return 0; }
   auto ir=miniptx::lowerToIR(ast);
+  if (!noOpt) miniptx::constantFolding(ir);
   if (mode=="ir" || dumpIR){ std::cout<<ir.dump(); }
   if (mode=="compile"){
     std::string ptx=miniptx::emitPTX(ir);
